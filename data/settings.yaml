@@ -1,0 +1,12 @@
+--- #settings.yaml
+# this is all fun and games, but according to wikipedia, this might not be better for long term repetition compared to constant intervals
+# > constant intervals?
+# timespan longer
+# catch what I can't do...
+fuzz: 0.5
+minimum_ease: 1
+base_ease: 250 # min 130 best 250
+easy_bonus: 130 # min 100%
+max_interval: 36525
+max_link_contribution: 100
+interval_change: 50 #newInterval = oldInterval * intervalChange / 100

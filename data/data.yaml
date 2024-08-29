@@ -1,0 +1,53 @@
+todos:
+  - id: 1
+    title: \"Learn how to use YAML in your projects\"
+    completed: false
+    created: 2020-01-01
+    updated: 2020-01-01
+    due: 2020-01-01
+    priority: 0
+    tags: [yamllint, yaml]
+  - id: 2
+    title: \"Learn backend development\"
+    completed: false
+    created: 2020-01-01
+    updated: 2020-01-01
+    due: 2020-01-01
+    priority: 0
+    tags: [code, backend, rust, rust-lang]
+
+spaced_repetition:
+  - id: 1
+    title: \"Learn rust\"
+    created: 2020-01-01
+    last_updated: 2020-01-01
+    last_reviewed: 2020-01-01
+    next_review: 2020-01-01
+    ease: 1
+    priority: 0
+    tags: [code, rust, rust-lang]
+
+data:
+  - tags_ease:
+      - yamllint:
+        - count: 10
+        - ease: 1 
+      - yaml:
+        - count: 10
+        - ease: 1
+      - backend:
+        - count: 10
+        - ease: 1
+      - rust:
+        - count: 10
+        - ease: 1
+      - code:
+        - count: 10
+        - ease: 1
+      - rust:
+        - count: 10
+        - ease: 1
+      - rust-lang:
+        - count: 10
+        - ease: 1
+    
