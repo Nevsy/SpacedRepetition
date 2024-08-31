@@ -11,11 +11,12 @@ pub use structs::*;
 #[command(name = "Repeat", bin_name = "spacedRepetition", author, version)]
 #[command(about = "Spaced repetition CLI or TUI idk yet, using Rust \n Allows you to manage your todos, but mostly your spaced repetition :)", long_about = None)]
 
-struct Cli {
+pub struct Cli {
 	/// Turn debugging information on
 	#[arg(short, long, action = clap::ArgAction::Count)]
     debug: u8,
 
+	/// ADD: tags to be added to the todo
 	#[arg(short, long)]
 	tags: Vec<String>,
 
@@ -35,13 +36,20 @@ enum Commands {
 		todo_id: u32
 	},
 
-	/// Lists all todos
+	/// Lists all items
 	Ls {
 		which: Option<String>
 	},
 
+	/// Remove an item
 	Rm {
 		item_id: u32
+	},
+
+	/// Sets an item as being revised
+	Revised {
+		item_id: u32,
+		ease: u8
 	}
 }
 
@@ -57,7 +65,8 @@ fn main() {
 
 	match &cli.command {
 		Some(Commands::Add { title}) => {
-			add_todo(title, &cli);	
+			let mut data: Data = get_data();
+			data.add_todo(title, &cli);	
 		}
 
 		Some(Commands::Check { todo_id }) => {
@@ -72,6 +81,11 @@ fn main() {
 			remove_item(item_id);
 		},
 
+		Some(Commands::Revised { item_id, ease }) => {
+			let mut data: Data = get_data();
+			data.revised_item(*item_id, *ease);
+		}
+
         None => {
 			let data = get_data();
 			data.list_todos();
@@ -79,43 +93,6 @@ fn main() {
 			println!("\nNo command specified");
 		}
     }
-}
-
-fn add_todo(title: &str, cli: &Cli) {
-    let mut data = get_data();
-	let mut next_id = 0;
-
-	for (_i, todo) in data.todos.iter().enumerate() {
-		if todo.id >= next_id {
-			next_id = todo.id + 1;
-		}
-	}
-	for (_i, item) in data.spaced_repetition.iter().enumerate() {
-		if item.id >= next_id {
-			next_id = item.id + 1;
-		}
-	}
-
-    let new_todo = Todo {
-        id: next_id,
-        title: title.to_string(),
-        created: chrono::Local::now(),
-        updated: chrono::Local::now(),
-        priority: Some(0),
-        tags: cli.tags.clone(),
-    };
-
-	for tag in &new_todo.tags {
-		if !data.tags_ease.iter().any(|t: &TagsEase| t.tag == *tag) {
-			println!("Tag '{}' not found in config, adding it", tag);
-			data.add_tag(tag.to_string());
-			continue;
-		}
-	}
-
-    data.todos.push(new_todo);
-    data.save("./data/data.yaml").expect("Failed to save todo");
-    println!("Todo added: {} -> {}", title, next_id);
 }
 
 fn remove_item(item_id: &u32) {

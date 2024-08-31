@@ -7,12 +7,13 @@ use serde;
 #[warn(dead_code)]
 pub struct Config {
 	pub fuzz: f32,
-	pub minimum_ease: u32,
-	pub base_ease: u32, // min 130 best 250
-	pub easy_bonus: u32, // min 100%
+	//pub minimum_ease: u32,
+	pub base_interval: u32, // min 1
+	pub easy_bonus: u32, // min 1
+	pub hard_time: u32, // min 1
 	pub max_interval: u32,
-	pub max_link_contribution: u32,
-	pub interval_change: u32 //newInterval = oldInterval * intervalChange / 100
+	//pub max_link_contribution: u32,
+	pub interval_change: u32 //newInterval = oldInterval * intervalChange
 }
 
 impl Config {

@@ -3,10 +3,11 @@
 # > constant intervals?
 # timespan longer
 # catch what I can't do...
-fuzz: 0.5
-minimum_ease: 1
-base_ease: 250 # min 130 best 250
-easy_bonus: 130 # min 100%
+fuzz: 0.25
+#minimum_ease: 1
+base_interval: 2 # min 130 best 250
+easy_bonus: 4 # min 1
+hard_time: 3 # min 1
 max_interval: 36525
-max_link_contribution: 100
-interval_change: 50 #newInterval = oldInterval * intervalChange / 100
+#max_link_contribution: 100
+interval_change: 3 # newInterval = oldInterval * intervalChange
