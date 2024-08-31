@@ -1,53 +1,68 @@
 todos:
-  - id: 1
-    title: \"Learn how to use YAML in your projects\"
-    completed: false
-    created: 2020-01-01
-    updated: 2020-01-01
-    due: 2020-01-01
-    priority: 0
-    tags: [yamllint, yaml]
-  - id: 2
-    title: \"Learn backend development\"
-    completed: false
-    created: 2020-01-01
-    updated: 2020-01-01
-    due: 2020-01-01
-    priority: 0
-    tags: [code, backend, rust, rust-lang]
-
+- id: 1
+  title: test2
+  completed: false
+  created: 2024-08-30 16:59:22.978056965 +02:00
+  updated: 2024-08-30 16:59:22.978157897 +02:00
+  priority: 0
+  tags: []
+- id: 2
+  title: test3
+  completed: false
+  created: 2024-08-30 16:59:27.893899436 +02:00
+  updated: 2024-08-30 16:59:27.894028503 +02:00
+  priority: 0
+  tags: []
+- id: 4
+  title: test5
+  completed: false
+  created: 2024-08-30 17:00:15.385874786 +02:00
+  updated: 2024-08-30 17:00:15.385958153 +02:00
+  priority: 0
+  tags: []
+- id: 5
+  title: test
+  completed: false
+  created: 2024-08-30 23:38:08.012550466 +02:00
+  updated: 2024-08-30 23:38:08.012600317 +02:00
+  priority: 0
+  tags: []
+- id: 6
+  title: test
+  completed: false
+  created: 2024-08-30 23:40:41.024545181 +02:00
+  updated: 2024-08-30 23:40:41.024779440 +02:00
+  priority: 0
+  tags:
+  - math
 spaced_repetition:
-  - id: 1
-    title: \"Learn rust\"
-    created: 2020-01-01
-    last_updated: 2020-01-01
-    last_reviewed: 2020-01-01
-    next_review: 2020-01-01
-    ease: 1
-    priority: 0
-    tags: [code, rust, rust-lang]
-
-data:
-  - tags_ease:
-      - yamllint:
-        - count: 10
-        - ease: 1 
-      - yaml:
-        - count: 10
-        - ease: 1
-      - backend:
-        - count: 10
-        - ease: 1
-      - rust:
-        - count: 10
-        - ease: 1
-      - code:
-        - count: 10
-        - ease: 1
-      - rust:
-        - count: 10
-        - ease: 1
-      - rust-lang:
-        - count: 10
-        - ease: 1
-    
+- id: 0
+  title: 'math: chapter 8'
+  created: 2024-08-30 16:58:11.900272012 +02:00
+  last_updated: 2024-08-30 16:58:11.900364981 +02:00
+  last_reviewed: 2024-08-30 16:58:11.900364981 +02:00
+  next_review: 2024-08-30 16:58:11.900364981 +02:00
+  ease: 1.0
+  priority: 0
+  tags: []
+- id: 3
+  title: test4
+  created: 2024-08-30 16:59:30.054947371 +02:00
+  last_updated: 2024-08-30 16:59:30.055047604 +02:00
+  last_reviewed: 2024-08-30 16:59:30.055047604 +02:00
+  next_review: 2024-08-30 16:59:30.055047604 +02:00
+  ease: 1.0
+  priority: 0
+  tags: []
+- id: 7
+  title: testTags
+  created: 2024-08-30 23:43:37.331359087 +02:00
+  last_updated: 2024-08-30 23:43:37.331439571 +02:00
+  last_reviewed: 2024-08-30 23:43:37.331439571 +02:00
+  next_review: 2024-08-30 23:43:37.331439571 +02:00
+  ease: 0.0
+  priority: 0
+  tags:
+  - math
+  - test
+tags_ease: []
