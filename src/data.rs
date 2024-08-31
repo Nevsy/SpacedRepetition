@@ -9,10 +9,8 @@ use crate::config::Config;
 //use serde::{Deserialize, Serialize};
 use serde_yaml;
 use std::fs;
-use std::cmp::*;
+use std::cmp::min;
 use std::error::Error;
-use rand::prelude::*;
-
 
 impl Data {
     pub fn load(path: &str) -> Result<Self, Box<dyn Error>> {
@@ -122,7 +120,6 @@ impl Data {
 			// Calculate the time until the next review
 			let config = Config::load("./data/settings.yaml").expect("Failed to load config");
 			let average_tag_ease = self.get_average_tag_ease(&todo.tags, config);
-			let interval_val = min(config.max_interval, average_tag_ease as u32);
 			// Make the new item
 			let new_item = SpacedRepetitionItem {
 				id: todo.id,
@@ -131,8 +128,8 @@ impl Data {
 				updated: chrono::Local::now(),
 				reviewed: chrono::Local::now(),
 				ease: average_tag_ease,  // Start with a default ease
-				interval: interval_val,
-				next_review: chrono::Local::now() + chrono::Duration::days(interval_val as i64),
+				interval: average_tag_ease as u32,
+				next_review: chrono::Local::now() + chrono::Duration::days(average_tag_ease as i64),
 				priority: todo.priority,
 				tags: todo.tags.clone(),
 			};
@@ -182,18 +179,22 @@ impl Data {
 			let config = Config::load("./data/settings.yaml").expect("Failed to load config");
 			self.spaced_repetition[index].reviewed = chrono::Local::now();
 			if ease == 1 {
-				self.spaced_repetition[index].ease = 2.0;
+				self.spaced_repetition[index].ease = 3.0;
 				self.spaced_repetition[index].interval = self.spaced_repetition[index].interval * config.interval_change + config.easy_bonus;
 			}
 			else if ease == 2 {
-				self.spaced_repetition[index].ease = 1.5;
+				self.spaced_repetition[index].ease = 2.0;
 				self.spaced_repetition[index].interval = self.spaced_repetition[index].interval * config.interval_change;
 			}
 			else if ease == 3 {
 				self.spaced_repetition[index].ease = 1.0;
 				self.spaced_repetition[index].interval = config.hard_time;
 			}
+			self.spaced_repetition[index].interval = min(self.spaced_repetition[index].interval, config.max_interval);
 			self.spaced_repetition[index].next_review = chrono::Local::now() + chrono::Duration::days(self.spaced_repetition[index].interval as i64);
+
+			self.update_tags_ease(index);
+
 			println!("Revised item \"{}\" with ease {}", self.spaced_repetition[index].title, ease);
 			println!("\t-> next review in {} days", self.spaced_repetition[index].interval);
 			
@@ -214,24 +215,40 @@ impl Data {
 		for tag in tags {
 			for (_index, tag_ease) in self.tags_ease.iter().enumerate() {
 				if tag == &tag_ease.tag {
-					let random_float: f64 = rand::thread_rng().gen::<f64>() * 2.0 - 1.0; // generates a float between 0 and 1 -> -1.0 and 1.0
-					total_ease += tag_ease.ease * (random_float * config.fuzz as f64);
+					total_ease += tag_ease.ease / tag_ease.count as f64;				
 				}
 			}
 		}
+
+		println!("Average ease: {}", total_ease);
 		if total_ease < 1.0 {
 			return config.base_interval as f64;
 		}
 		else {
-			return total_ease / (tags.len() as f64);
+			let mut ease = total_ease / (tags.len() as f64);
+			if ease > config.max_link_contribution as f64 {
+				ease = config.max_link_contribution as f64;
+			}
+			return ease;
+		}
+	}
+
+	fn update_tags_ease(&mut self, index: usize) {
+		for (_index, tag) in self.spaced_repetition[index].tags.iter().enumerate() {
+			for (_index, tag_ease) in self.tags_ease.iter_mut().enumerate() {
+				if tag == &tag_ease.tag {
+					tag_ease.count += 1;
+					tag_ease.ease += self.spaced_repetition[index].ease;
+				}
+			}
 		}
 	}
 
 	pub fn add_tag (&mut self, tag: String) {
 		self.tags_ease.push(TagsEase {
 			tag: tag.clone(),
-			ease: 50.0,
-			count: 1
+			ease: 0.0,
+			count: 0
 		});
 	}
 }
