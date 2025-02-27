@@ -149,7 +149,7 @@ impl Data {
 			let todo = self.todos.remove(index);
 
 			// Calculate the time until the next review
-			let config = Config::load("./data/settings.yaml").expect("Failed to load config");
+			let config = Config::load("./data/settings.yaml").expect("Failed to load config, please add it under data/settings.yaml");
 			let average_tag_ease = self.get_average_tag_ease(&todo.tags, config);
 			// Make the new item
 			let new_item = SpacedRepetitionItem {
@@ -215,7 +215,7 @@ impl Data {
 			}
 
 			// TODO: Fix easing system, along with the tags
-			let config = Config::load("./data/settings.yaml").expect("Failed to load config");
+			let config = Config::load("./data/settings.yaml").expect("Failed to load config, please add it under data/settings.yaml");
 			self.spaced_repetition[index].reviewed = chrono::Local::now();
 			if ease == 1 {
 				self.spaced_repetition[index].ease = 3.0;

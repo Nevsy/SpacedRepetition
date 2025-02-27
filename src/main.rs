@@ -1,10 +1,13 @@
-//use crate::config::Config;
 mod structs;
 mod data;
 mod config;
 mod cli_reader;
 
 pub use structs::*;
+
+use std::fs::{self, File};
+use std::path::Path;
+use std::io::Write;
 
 fn main() {
 	let match_result = cli_reader::parse_commands();
@@ -107,5 +110,39 @@ fn list_data(which: Option<&String>, tags: Option<Vec<String>>) {
 }
 
 fn get_data() -> Data {
-	return Data::load("./data/data.yaml").unwrap_or_default();
+    let file_path = "./data/data.yaml";
+    let dir_path = Path::new(file_path).parent().unwrap();
+    
+    // Check if the data file exists
+    if !Path::new(file_path).exists() {
+        println!("Data file not found at {}", file_path);
+        
+        // Create directory if it doesn't exist
+        if !dir_path.exists() {
+            //println!("Creating directory: {}", dir_path.display());
+            fs::create_dir_all(dir_path).expect("Failed to create data directory");
+        }
+        
+        // Create an empty data file
+        //println!("Creating new data file");
+        let default_data = Data::default();
+        let yaml_content = serde_yaml::to_string(&default_data).expect("Failed to serialize default data");
+        
+        let mut file = File::create(file_path).expect("Failed to create data file");
+        file.write_all(yaml_content.as_bytes()).expect("Failed to write to data file");
+        
+        println!("Initialized new data file at {}", file_path);
+        
+        return default_data;
+    }
+    
+    // File exists, try loading it
+    match Data::load(file_path) {
+        Ok(data) => data,
+        Err(e) => {
+            eprintln!("Error loading data file: {}", e);
+            println!("Using default data instead");
+            Data::default()
+        }
+    }
 }
