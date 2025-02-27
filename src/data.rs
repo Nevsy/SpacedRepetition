@@ -3,7 +3,6 @@
 //pub use structs::Data;
 //use crate::structs::Data;
 use crate::structs::*;
-use crate::Cli;
 use crate::config::Config;
 
 //use serde::{Deserialize, Serialize};
@@ -25,7 +24,7 @@ impl Data {
         Ok(())
     }
 
-	pub fn add_todo(&mut self, title: &str, cli: &Cli) {
+	pub fn add_todo(&mut self, title: &str, tags: Vec<String>) {
 		let mut next_id = 0;
 		
 		// get next id
@@ -47,7 +46,7 @@ impl Data {
 			created: chrono::Local::now(),
 			updated: chrono::Local::now(),
 			priority: Some(0),
-			tags: cli.tags.clone(),
+			tags: tags.clone(),
 		};
 		
 		// check if tag exists
@@ -56,6 +55,13 @@ impl Data {
 				println!("Tag '{}' not found in existing tags, adding it", tag);
 				self.add_tag(tag.to_string());
 				continue;
+			}
+			else {
+				self.tags_ease.iter_mut().for_each(|t: &mut TagsEase| {
+					if t.tag == *tag {
+						t.count += 1;
+					}
+				});
 			}
 		}
 		
@@ -83,31 +89,56 @@ impl Data {
 		Err(format!("Todo with id {} not found", id))
 	}
 
-	pub fn list_spaced_repetition(&self) {
+	pub fn list_spaced_repetition(&self, tags: Option<Vec<String>>) {
 		if self.spaced_repetition.is_empty() {
 			println!("No revision found");
 		}
 		else {
-			println!("Listing todos...");
-			for item in &self.spaced_repetition {
-				println!("{}\t", item.title);
-				println!("\t-> id: {}", item.id);
-				println!("\t-> tags: {:?}", item.tags);
-				println!("\t-> Next review in {}d", (item.next_review - chrono::Local::now()).num_days());
+			if tags.is_none() {
+				println!("Listing spaced repetition items...");
+				for item in &self.spaced_repetition {
+					item.print_item();
+				}
+			}
+			else {
+				let tags = tags.unwrap();
+				println!("Listing spaced repetition items with tags {:?}...", tags);
+				let mut printed: Vec<u32> = [].to_vec();// Make sure we don't print the same item twice
+				for item in &self.spaced_repetition {
+					for tag in &tags {
+						if item.tags.contains(tag) && !printed.contains(&item.id) {
+							printed.push(item.id);
+							item.print_item();
+						}
+					}
+				}
 			}
 		}
 	}
 
-	pub fn list_todos(&self) {
+	pub fn list_todos(&self, tags: Option<Vec<String>>) {
 		if self.todos.is_empty() {
 			println!("No todos found");
 		}
 		else {
-			println!("Listing todos...");
-			for todo in &self.todos {
-				println!("{}\t", todo.title);
-				println!("\t-> id: {}", todo.id);
-				println!("\t-> tags: {:?}", todo.tags);
+			if tags.is_none() {
+				println!("Listing todos...");
+				for todo in &self.todos {
+					todo.print_todo();
+				}
+			}
+			else {
+				let tags = tags.unwrap();
+				println!("Listing todos with tags {:?}...", tags);
+				let mut printed: Vec<u32> = [].to_vec(); // Make sure we don't print the same todo twice
+				for todo in &self.todos {
+					for tag in &tags {
+						if todo.tags.contains(tag) && !printed.contains(&todo.id) {
+							printed.push(todo.id);
+							todo.print_todo();
+						}
+					}
+				}
 			}
 		}
 	}
@@ -144,7 +175,7 @@ impl Data {
 			self.spaced_repetition.push(new_item);
 			Ok(())
 		} else {
-			Err(format!("Todo with id {} not found", todo_id))
+			Err(format!("Todo with id {} not found\nTo mark an item as revised, use \"spaced revised <id> <ease>\". More about this function using --help.", todo_id))
 		}
 	}
 
@@ -153,14 +184,21 @@ impl Data {
 			println!("Nothing to revise");
 		}
 		else {
-			println!("Checking to revise...");
 			let current_time = chrono::Local::now();
+			let mut count: u32 = 0;
 			for item in &self.spaced_repetition {
 				if (item.next_review - current_time).num_seconds() <= 0 {
+					if count == 0 {
+						println!("Checking to revise...");
+					}
+					count += 1;
 					println!("{}\t", item.title);
 					println!("\t-> id: {}", item.id);
 					println!("\t-> tags: {:?}", item.tags);
 				}
+			}
+			if count == 0 {
+				println!("Nothing to revise");
 			}
 		}
 	}
@@ -176,6 +214,7 @@ impl Data {
 				return;
 			}
 
+			// TODO: Fix easing system, along with the tags
 			let config = Config::load("./data/settings.yaml").expect("Failed to load config");
 			self.spaced_repetition[index].reviewed = chrono::Local::now();
 			if ease == 1 {
@@ -247,8 +286,8 @@ impl Data {
 	pub fn add_tag (&mut self, tag: String) {
 		self.tags_ease.push(TagsEase {
 			tag: tag.clone(),
-			ease: 0.0,
-			count: 0
+			ease: 2.0,
+			count: 1
 		});
 	}
 }

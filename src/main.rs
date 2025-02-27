@@ -1,104 +1,64 @@
-use clap::{Parser, Subcommand};
-
 //use crate::config::Config;
 mod structs;
 mod data;
 mod config;
+mod cli_reader;
 
 pub use structs::*;
 
-#[derive(Parser)]
-#[command(name = "Repeat", bin_name = "spacedRepetition", author, version)]
-#[command(about = "Spaced repetition CLI or TUI idk yet, using Rust \n Allows you to manage your todos, but mostly your spaced repetition :)", long_about = None)]
+fn main() {
+	let match_result = cli_reader::parse_commands();
+	
+	if let Some(matches_add) = match_result.subcommand_matches("add") {
+		//"$ spaced add" was run
+		let mut data: Data = get_data();
+		if let Some(title) = matches_add.get_one::<String>("title") {
+			//"$ spaced add ... ..." was run
+			println!("Adding todo...");
+			//if let Some(tags) = matches_add.get_many::<String>("tags").unwrap_or_default().map(|v| v.as_str()).collect::<Vec<_>>() {
+			let tags: Option<Vec<String>> = matches_add
+                .get_many::<String>("tags")
+                .map(|values| values.map(|v| v.to_string()).collect::<Vec<String>>());
+			if let Some(tag_vec) = tags {
+				//"$ spaced add ... -t ... ..." was run
+				data.add_todo(title, Some(tag_vec).unwrap());
+			} else {
+				data.add_todo(title, <Option<Vec<String>>>::None.unwrap());
+				println!("No tags provided, 1 recommended");
+			}
+		} else {
+			println!("Not printing testing lists...");
+		}
+	}
 
-pub struct Cli {
-	/// Turn debugging information on
-	#[arg(short, long, action = clap::ArgAction::Count)]
-    debug: u8,
+	if let Some(matches_ls) = match_result.subcommand_matches("ls") {
+		//"$ spaced ls ..." was run
 
-	/// ADD: tags to be added to the todo
-	#[arg(short, long)]
-	tags: Vec<String>,
+		let tags: Option<Vec<String>> = matches_ls
+			.get_many::<String>("tags")
+			.map(|values| values.map(|v| v.to_string()).collect::<Vec<String>>());
 
-    #[command(subcommand)]
-    command: Option<Commands>,
-}
+		let which = matches_ls.get_one::<String>("which"); //"$ spaced ls ... ..." was run
+		list_data(which, tags);
+	}
 
-#[derive(Subcommand)]
-enum Commands {
-	/// Adds a new todo
-	Add {
-		title: String
-	},
+	if let Some(matches_rm) = match_result.subcommand_matches("rm") {
+		//"$ spaced rm ..." was run
+		let item_id = *matches_rm.get_one::<u32>("item_id").unwrap();
+		remove_item(item_id);
+	}
 
-	/// Marks a todo as done
-	Check {
-		todo_id: u32
-	},
-
-	/// Lists all items
-	Ls {
-		which: Option<String>
-	},
-
-	/// Remove an item
-	Rm {
-		item_id: u32
-	},
-
-	/// Sets an item as being revised
-	Revised {
-		item_id: u32,
-		ease: u8
+	if let Some(matches_check) = match_result.subcommand_matches("check") {
+		//"$ spaced check ..." was run
+		let todo_id = *matches_check.get_one::<u32>("todo_id").unwrap();
+		set_todo_done(todo_id);
 	}
 }
 
-fn main() {
-	let cli = Cli::parse();
-
-	match cli.debug {
-        0 => println!("Debug mode is off"),
-        1 => println!("Debug mode is kind of on"),
-        2 => println!("Debug mode is on"),
-        _ => println!("Don't be crazy"),
-    }
-
-	match &cli.command {
-		Some(Commands::Add { title}) => {
-			let mut data: Data = get_data();
-			data.add_todo(title, &cli);	
-		}
-
-		Some(Commands::Check { todo_id }) => {
-			set_todo_done(*todo_id);
-		}
-
-		Some (Commands::Ls { which }) => {
-			list_data(which);
-		},
-
-		Some(Commands::Rm { item_id }) => {
-			remove_item(item_id);
-		},
-
-		Some(Commands::Revised { item_id, ease }) => {
-			let mut data: Data = get_data();
-			data.revised_item(*item_id, *ease);
-		}
-
-        None => {
-			let data = get_data();
-			data.list_todos();
-			data.check_to_revise();
-			println!("\nNo command specified");
-		}
-    }
-}
-
-fn remove_item(item_id: &u32) {
+fn remove_item(item_id: u32) {
 	let mut data: Data = get_data();
 	
-	if let Err(e) = data.remove_item(*item_id) {
+	if let Err(e) = data.remove_item(item_id) {
 		eprintln!("{}", e);
 	} else {
 		data.save("./data/data.yaml").expect("Failed to save data");
@@ -113,29 +73,34 @@ fn set_todo_done(todo_id: u32) {
         eprintln!("{}", e);
     } else {
         data.save("./data/data.yaml").expect("Failed to save data");
-        println!("Todo with id {} marked as done and moved to spaced repetition", todo_id);
+        //println!("Todo with id {} marked as done and moved to spaced repetition", todo_id);
     }
 }
 
-fn list_data(which: &Option<String>) {
+fn list_data(which: Option<&String>, tags: Option<Vec<String>>) {
 	let data = get_data();
-	match which.as_deref() {
-		None | Some("all") | Some("void") => {
-			data.list_todos();
+	if which.is_none() {
+		data.list_todos(tags.clone());
+		println!();
+		data.list_spaced_repetition(tags.clone());
+		return;
+	}
+	match which.unwrap().as_str() {
+		"all" | "void" => {
+			data.list_todos(tags.clone());
 			println!();
-			data.list_spaced_repetition();
+			data.list_spaced_repetition(tags.clone());
 		}
 
-		Some("todo") => {
-			data.list_todos()
+		"todo" => {
+			data.list_todos(tags.clone())
 		}
 		
-		Some("spaced") => {
-			data.list_spaced_repetition()
+		"spaced" | "spaced_repetition" | "repetition" => {
+			data.list_spaced_repetition(tags.clone())
 		}
 
 		_ => {
-			// TODO: listing by tag
 			println!("Invalid argument. Please use 'todo', 'spaced' or nothing");
 		}
 	}
